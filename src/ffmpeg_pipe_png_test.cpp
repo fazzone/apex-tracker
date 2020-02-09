@@ -1,6 +1,8 @@
 #include <dlib/matrix.h>
 #include <dlib/image_io.h>
 #include <dlib/image_transforms.h>
+#include <dlib/data_io.h>
+#include <dlib/image_processing.h>
 #include <dlib/gui_widgets.h>
 #include <dlib/image_keypoint/draw_surf_points.h>
 #include <dlib/cmd_line_parser.h>
@@ -48,12 +50,9 @@ int main(int argc, char ** argv) {
     if (width_step(img) != ncols * sizeof(bgr_pixel))
       throw "no padding allowed";
 
-
-    std::vector<surf_point> sp;
-    string input_surf_path = get_option(parser, "s", "surf.ser");
-    ifstream surf_ifs(input_surf_path, ios::binary);
-    deserialize(sp, surf_ifs);
-    cout <<"Loaded " <<sp.size() <<" SURF points" <<endl;
+    typedef scan_fhog_pyramid<pyramid_down<6> > image_scanner_type;
+    object_detector<image_scanner_type> detector;
+    deserialize("map_detector.svm") >> detector;
 
     string input_file = get_option(parser, "i", "-");
     std::istream *pin = &cin;
@@ -91,61 +90,14 @@ int main(int argc, char ** argv) {
       //save_png(eq_img, sout.str());
 
       if (frame > 300) {
-        equalize_histogram(subimage, eq_img);
-        std::vector<surf_point> mini_sp = get_surf_points(eq_img, 100, 200.0);
-        cout << "number of SURF points found: "<< mini_sp.size() << endl;
-
-        squared_euclidean_distance dc;
-
-        std::vector<surf_point> matched;
-        
-        for (int i = 0; i < mini_sp.size(); i++) {
-          double dt = 0.001;
-          int min_d = 99;
-          surf_point &best_match = sp[0];
-          for (int j = 0; j < sp.size(); j++) {
-            int d = 0;
-            double delta_angle = mini_sp[i].angle - sp[j].angle;
-            if (delta_angle * delta_angle > 0.1)
-              continue;
-
-            for (int di = 0; di < 64; di++) {
-              double diff = mini_sp[i].des(di, 0) - sp[j].des(di, 0);
-              if (diff*diff < dt)
-                d += 1;
-            }
-            if (d < min_d) {
-              min_d = d;
-              best_match = sp[j];
-            }
-          }
-          cout <<"point " <<i <<" ?maps to " <<best_match.p.center(0) <<", " <<best_match.p.center(1) <<endl;
-          matched.push_back(best_match);
-        }
-        array2d<bgr_pixel> matches_image;
-        assign_image(matches_image, map_image);
-
-        // for (unsigned long i = 0; i < matched.size(); ++i)
-        //   {
-        //     const unsigned long radius = static_cast<unsigned long>(sp[i].p.scale*3);
-        //     const point center(sp[i].p.center);
-        //     point direction = center + point(radius,0);
-        //     // SURF descriptors are rotated by sp[i].angle.  So we want to include a visual
-        //     // indication of this rotation on our overlay.
-        //     direction = rotate_point(center, direction, sp[i].angle);
-
-            
-        //     win.add_overlay(image_display::overlay_circle(center, radius, rgb_pixel(0,255,0)));
-        //     // Draw a line showing the orientation of the SURF descriptor.
-        //     win.add_overlay(center, direction, rgb_pixel(255,0,0));
-        //   }
-        
+        std::vector<rectangle> detections = detector(subimage);
+        array2d<bgr_pixel> draw;
+        assign_image(draw, subimage);
+        for (auto it = begin(detections); it != end(detections); ++it)
+          draw_rectangle(draw, *it, bgr_pixel(255, 255, 255));
         save_png(subimage, "subimage.png");
-        
-        image_window my_window(matches_image);
-        draw_surf_points(my_window, matched);
-        my_window.wait_until_closed();
-    
+        image_window iw(draw);
+        iw.wait_until_closed();
         //return 0;
       }
 

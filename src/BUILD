@@ -26,3 +26,10 @@ cc_binary(
     copts = ["/std:c++17"],
     deps = ["@dlib//:lib"],
 )
+
+cc_binary(
+    name = "train2",
+    srcs = ["train2.cpp"],
+    copts = ["/std:c++17"],
+    deps = ["@dlib//:lib"],
+)

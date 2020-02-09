@@ -82,6 +82,7 @@ int main(int argc, char** argv)
 
         cout <<"starting training" <<endl;
         object_detector<image_scanner_type> detector = trainer.train(sections_images, sections_rects);
+        serialize("map_detector.svm") << detector;
 
         cout << "training results: " << test_object_detection_function(detector, sections_images, sections_rects) << endl;
 
