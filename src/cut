@@ -1,0 +1,123 @@
+
+    // Now convert the image into a FHOG feature image.  The output, hog, is a 2D array
+    // of 31 dimensional vectors.
+    array2d<matrix<float,31,1> > hog;
+    extract_fhog_features(map_image, hog);
+
+    cout << "hog image has " << hog.nr() << " rows and " << hog.nc() << " columns." << endl;
+
+    // Let's see what the image and FHOG features look like.
+    image_window win(map_image);
+    image_window winhog(draw_fhog(hog));
+
+    // Another thing you might want to do is map between the pixels in img and the
+    // cells in the hog image.  dlib provides the image_to_fhog() and fhog_to_image()
+    // routines for this.  Their use is demonstrated in the following loop which
+    // responds to the user clicking on pixels in the image img.
+    point p;  // A 2D point, used to represent pixel locations.
+    while (win.get_next_double_click(p))
+      {
+        point hp = image_to_fhog(p);
+        cout << "The point " << p << " in the input image corresponds to " << hp << " in hog space." << endl;
+        cout << "FHOG features at this point: " << trans(hog[hp.y()][hp.x()]) << endl;
+      }
+
+    // Finally, sometimes you want to get a planar representation of the HOG features
+    // rather than the explicit vector (i.e. interlaced) representation used above.  
+    dlib::array<array2d<float> > planar_hog;
+    extract_fhog_features(map_image, planar_hog);
+    // Now we have an array of 31 float valued image planes, each representing one of
+    // the dimensions of the HOG feature vector.  
+
+
+
+
+
+
+    // Get SURF points from the image.  Note that get_surf_points() has some optional
+    // arguments that allow you to control the number of points you get back.  Here we
+    // simply take the default.
+    std::vector<surf_point> sp = get_surf_points(map_image);
+    cout << "number of SURF points found: "<< sp.size() << endl;
+
+    if (sp.size() > 0)
+      {
+        // A surf_point object contains a lot of information describing each point.
+        // The most important fields are shown below:
+        cout << "center of first SURF point: "<< sp[0].p.center << endl;
+        cout << "pyramid scale:     " << sp[0].p.scale << endl;
+        cout << "SURF descriptor: \n" << sp[0].des << endl;
+      }
+
+    // Create a window to display the input image and the SURF points.  (Note that
+    // you can zoom into the window by holding CTRL and scrolling the mouse wheel)
+    image_window my_window(map_image);
+    draw_surf_points(my_window, sp);
+
+    // wait until the user closes the window before we let the program 
+    // terminate.
+    my_window.wait_until_closed();
+
+
+
+        bgr_pixel &pix = img[r][c];
+        sample_type s;
+        s(0) = pix.red;
+        s(1) = pix.green;
+        s(2) = pix.blue;
+        samples.push_back(s);
+///////////////////
+    
+    typedef matrix<float,3,1> sample_type;
+    typedef radial_basis_kernel<sample_type> kernel_type;
+    kcentroid<kernel_type> kc(kernel_type(0.1),0.01, 8);
+
+    kkmeans<kernel_type> test(kc);
+
+    array2d<lab_pixel> lab_img;
+    lab_img.set_size(img.nr(), img.nc());
+    assign_image(lab_img, img);
+
+    std::set<lab_pixel, compare_lab_pixel> distinct_pixels;
+    for (int r = 0; r < img.nr(); r++) {
+      for (int c = 0; c < img.nc(); c++) {
+        distinct_pixels.insert(lab_img[r][c]);
+      }
+    }
+
+    cout <<img.nr() * img.nc() <<" actual pixels" <<endl;
+    cout <<distinct_pixels.size() <<" distint pixels" <<endl;
+
+    std::vector<sample_type> samples;
+    for (auto it = begin(distinct_pixels); it != end(distinct_pixels); ++it) {
+      sample_type s;
+      s(0) = it->l;
+      s(1) = it->a;
+      s(2) = it->b;
+      samples.push_back(s);
+    }
+    
+    std::vector<sample_type> initial_centers;
+    test.set_number_of_centers(8);
+    pick_initial_centers(8, initial_centers, samples, test.get_kernel());
+    test.train(samples,initial_centers);
+    
+    array2d<unsigned> labeled_image;
+    labeled_image.set_size(img.nr(), img.nc());
+
+    for (int r = 0; r < img.nr(); r++) {
+      for (int c = 0; c < img.nc(); c++) {
+        auto p = lab_img[r][c];
+        sample_type s;
+        s(0) = p.l;
+        s(1) = p.a;
+        s(2) = p.b;
+        assign_pixel(labeled_image[r][c], test(s));
+      }
+    }
+
+    auto colormap = randomly_color_image(labeled_image);
+    image_window iw(colormap);
+    iw.wait_until_closed();
+
+    cout <<"OK" <<endl;
