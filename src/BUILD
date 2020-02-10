@@ -1,10 +1,3 @@
-cc_binary(
-    name = "ffmpeg_pipe_png_test",
-    srcs = ["ffmpeg_pipe_png_test.cpp"],
-    copts = ["/std:c++17"],
-    deps = ["@dlib//:lib"],
-)
-
 
 cc_binary(
     name = "gui_ex",
@@ -34,6 +27,14 @@ cc_binary(
     deps = ["@dlib//:lib"],
 )
 
+
+cc_binary(
+    name = "surf_extract",
+    srcs = ["surf_extract.cpp"],
+    copts = ["/std:c++17"],
+    deps = ["@dlib//:lib"],
+)
+
 cc_library(
     name = "surf_match",
     hdrs = ["surf_match.h"],
@@ -50,10 +51,12 @@ cc_binary(
 )
 
 cc_binary(
-    name = "surf_extract",
-    srcs = ["surf_extract.cpp"],
+    name = "ffmpeg_pipe_png_test",
+    srcs = ["ffmpeg_pipe_png_test.cpp"],
     copts = ["/std:c++17"],
-    deps = ["@dlib//:lib"],
+    deps = [
+        ":surf_match",
+        "@dlib//:lib"
+    ],
 )
-
 

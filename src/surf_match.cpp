@@ -11,15 +11,15 @@ static double vec_distance(const matrix<double,64,1> &a, const matrix<double,64,
   return d;
 }
 
-std::vector<surf_point> match_surf_points(const std::vector<surf_point> &sub_surf_points, const std::vector<surf_point> &map_surf_points)
+std::vector<pair<size_t, size_t>> match_surf_points(const std::vector<surf_point> &first_surf_points, const std::vector<surf_point> &second_surf_points)
 {
-  std::vector<size_t> labels(map_surf_points.size());
-  std::vector<double> d_squared(map_surf_points.size());
-  std::vector<surf_point> matched_points;
-  for (auto it = begin(sub_surf_points); it != end(sub_surf_points); ++it) {
-    for (int i = 0; i < map_surf_points.size(); i++) {
-      d_squared[i] = vec_distance(it->des, map_surf_points[i].des);
-      labels[i] = i;
+  std::vector<size_t> labels(second_surf_points.size());
+  std::vector<double> d_squared(second_surf_points.size());
+  std::vector<pair<size_t, size_t>> matched_points;
+  for (int ifirst = 0; ifirst < first_surf_points.size(); ifirst++) {
+    for (int isecond = 0; isecond < second_surf_points.size(); isecond++) {
+      d_squared[isecond] = vec_distance(first_surf_points[ifirst].des, second_surf_points[isecond].des);
+      labels[isecond] = isecond;
     }
 
     auto comp = [&d_squared](size_t i, size_t j) {
@@ -39,7 +39,7 @@ std::vector<surf_point> match_surf_points(const std::vector<surf_point> &sub_sur
     // Filter for strong matches, where the best match is much better than the next best match
     auto nextbest = first + 1;
     if (d_squared[*nextbest] / d_squared[*first] > 5)
-      matched_points.push_back(map_surf_points[*first]);
+      matched_points.emplace_back(ifirst, *first);
   }
 
   return matched_points;
