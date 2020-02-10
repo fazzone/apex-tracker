@@ -26,7 +26,7 @@ std::vector<pair<size_t, size_t>> match_surf_points(const std::vector<surf_point
                   return d_squared[i] < d_squared[j];
                 };
 
-    const int k = 5;
+    const int k = 3;
     auto first = labels.begin(), last = labels.begin() + k, end = labels.end();
     std::make_heap(first, last + 1, comp);
     std::pop_heap(first, last + 1, comp);
@@ -38,7 +38,8 @@ std::vector<pair<size_t, size_t>> match_surf_points(const std::vector<surf_point
     std::sort_heap(first, last, comp);
     // Filter for strong matches, where the best match is much better than the next best match
     auto nextbest = first + 1;
-    if (d_squared[*nextbest] / d_squared[*first] > 5)
+
+    if (d_squared[*nextbest] / d_squared[*first] > 2)
       matched_points.emplace_back(ifirst, *first);
   }
 

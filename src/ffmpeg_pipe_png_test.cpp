@@ -24,6 +24,12 @@ using namespace std;
 using namespace dlib;
 namespace fs = std::filesystem;
 
+struct fix_result {
+  bool good;
+  point position;
+};
+  
+
 int main(int argc, char ** argv) {
   try {
     command_line_parser parser;
@@ -84,43 +90,78 @@ int main(int argc, char ** argv) {
     array2d<bgr_pixel> path_img;
     assign_image(path_img, map_image);
 
+    point last_fix_position(0, 0);
+    double search_radius = 1e9;
+
+    int n_sub_surf = 1000;
+
+    image_window path_window(map_image);
+
     while (in) {
       in.read(buffer, buffer_size);
 
-      if (frame > 300 && frame % 20 == 0) {
+      //if (frame > 300 && frame % 5 == 0) {
+      if (1) {
         cout <<"Finding SURF points in subimage...";
-        std::vector<surf_point> sub_surf_points = get_surf_points(subimage);
-        cout <<"done" <<endl;
+        std::vector<surf_point> sub_surf_points = get_surf_points(subimage, n_sub_surf);
+        cout <<"done (" <<sub_surf_points.size() <<" points)" <<endl;
 
-        cout <<"Comparing descriptors..." <<endl;
-        std::vector<std::pair<size_t, size_t> > matched_points = match_surf_points(sub_surf_points, map_surf_points);
+        std::vector<surf_point> compare_points;
+        for (int i = 0; i < map_surf_points.size(); i++) {
+          double d = length_squared(last_fix_position - map_surf_points[i].p.center);
+          if (d < search_radius * search_radius) {
+            compare_points.push_back(map_surf_points[i]);
+          }
+        }
+        if (compare_points.size() == 0)
+          compare_points = map_surf_points;
+        
+        cout <<"Comparing against " <<compare_points.size() <<" descriptors..." <<endl;
+        std::vector<std::pair<size_t, size_t> > matched_points = match_surf_points(sub_surf_points, compare_points);
     
         std::vector<point> sub_points, map_points;
         for (auto it = begin(matched_points); it != end(matched_points); ++it) {
           sub_points.push_back(sub_surf_points[it->first].p.center);
-          map_points.push_back(map_surf_points[it->second].p.center);
+          map_points.push_back(compare_points[it->second].p.center);
         }
 
         if (sub_points.size() < 3) {
           cout <<"Not enough matched points" <<endl;
+
+          // ostringstream sfn;
+          // sfn <<"hiccup"  <<frame <<".png";
+          // save_png(path_img, sfn.str());
+          // sfn <<".minimap.png";
+          // save_png(subimage, sfn.str());
+          
+          search_radius *= 1.5;
+          n_sub_surf = 1000;
           continue;
         }
 
         auto transform = find_affine_transform(sub_points, map_points);
         point sub_center(section_width/2, section_height/2);
-        auto section_rect = rectangle(0, 0, section_width, section_height);
-        auto rect_transform = rectangle_transform(transform);
-        
+        last_fix_position = transform(sub_center);
+
+        search_radius = 180;
+        n_sub_surf = 50;
+        cout <<"===== Fix position " <<last_fix_position.x() <<", " <<last_fix_position.y() <<endl;
+        path_window.add_overlay(image_display::overlay_circle(last_fix_position, 4, rgb_pixel(255,255,255)));
+
         //array2d<bgr_pixel> draw_img;
         //assign_image(draw_img, map_image);
+        //auto rect_transform = rectangle_transform(transform);
+        //auto section_rect = rectangle(0, 0, section_width, section_height);
         //draw_rectangle(draw_img, rect_transform(section_rect), bgr_pixel(255, 255, 255), 4);
         //draw_solid_circle(draw_img, transform(sub_center), 8.0, bgr_pixel(255, 255, 255));
 
-        draw_solid_circle(path_img, transform(sub_center), 8.0, bgr_pixel(255, 255, 255));
+        draw_solid_circle(path_img, last_fix_position, 2.0, bgr_pixel(255, 255, 255));
       
-        ostringstream sfn;
-        sfn <<"path"  <<frame <<".png";
-        save_png(path_img, sfn.str());
+        // if (frame % 100 == 0) {
+        //   ostringstream sfn;
+        //   sfn <<"path"  <<frame <<".png";
+        //   save_png(path_img, sfn.str());
+        // }
       }
 
       frame++;

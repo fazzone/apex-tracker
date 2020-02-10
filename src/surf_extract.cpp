@@ -17,6 +17,8 @@ int main(int argc, char ** argv) {
     command_line_parser parser;
     parser.add_option("i", "input png", 1);
     parser.add_option("o", "output SURF points data", 1);
+    parser.add_option("n", "max number of points to generate", 1);
+    parser.add_option("t", "minimum p score threshold", 1);
     
     parser.parse(argc, argv);
 
@@ -32,7 +34,10 @@ int main(int argc, char ** argv) {
 
     
     cout <<"Extracting SURF points" <<"...";
-    std::vector<surf_point> surf_points = get_surf_points(img);
+    long max_points = get_option(parser, "n", 10000);
+    double dthresh = get_option(parser, "t", 30.0);
+
+    std::vector<surf_point> surf_points = get_surf_points(img, max_points, dthresh);
     cout <<"done" <<endl;
     string surf_path = get_option(parser, "o", "surf.dat");
     serialize(surf_path) <<surf_points;
