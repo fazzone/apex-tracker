@@ -33,3 +33,27 @@ cc_binary(
     copts = ["/std:c++17"],
     deps = ["@dlib//:lib"],
 )
+
+cc_library(
+    name = "surf_match",
+    hdrs = ["surf_match.h"],
+    srcs = ["surf_match.cpp"],
+    copts = ["/std:c++17"],
+    deps = ["@dlib//:lib"],
+)
+
+cc_binary(
+    name = "surf_test",
+    srcs = ["surf_test.cpp"],
+    copts = ["/std:c++17"],
+    deps = [":surf_match", "@dlib//:lib"],
+)
+
+cc_binary(
+    name = "surf_extract",
+    srcs = ["surf_extract.cpp"],
+    copts = ["/std:c++17"],
+    deps = ["@dlib//:lib"],
+)
+
+
