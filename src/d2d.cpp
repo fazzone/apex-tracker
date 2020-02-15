@@ -194,12 +194,11 @@ HRESULT DemoApp::CreateDeviceResources()
 
       if (SUCCEEDED(hr)) {
         ID2D1Bitmap *bitmap = NULL;
-        HRESULT hrb = LoadBitmapFromFile(m_pRenderTarget, m_pWICFactory,
-                                         L".\\res\\mp_rr_desertlands_mu1_s4launch_small.png",
-                                         2048,
-                                         2048,
-                                         &m_pBitmap
-                                         );
+        LPWSTR res_path = L".\\res\\mp_rr_desertlands_mu1_s4launch_small.png", cd_path = L".\\mp_rr_desertlands_mu1_s4launch_small.png";
+        HRESULT hrb = LoadBitmapFromFile(m_pRenderTarget, m_pWICFactory, res_path, 2048, 2048, &m_pBitmap);
+        if (!SUCCEEDED(hrb)) {
+          hrb = LoadBitmapFromFile(m_pRenderTarget, m_pWICFactory, cd_path, 2048, 2048, &m_pBitmap);
+        }
         if (!SUCCEEDED(hrb)) {
           m_pBitmap = NULL;
         }

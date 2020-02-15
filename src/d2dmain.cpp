@@ -102,10 +102,12 @@ int WINAPI WinMain(
 
                                       std::vector<dlib::surf_point> sub_surf_points = dlib::get_surf_points(dimg);
                                       auto r = matcher.find_match(sub_surf_points);
-                                      amp.x = r.x;
-                                      amp.y = r.y;
+                                      if (r.good) {
+                                        amp.x = r.x;
+                                        amp.y = r.y;
                                       
-                                      SendMessage(app.get_hwnd(), message::AddMapPoint::message_type, (LPARAM)(&amp), 0);
+                                        SendMessage(app.get_hwnd(), message::AddMapPoint::message_type, (LPARAM)(&amp), 0);
+                                      }
                                     }
                                   });
 

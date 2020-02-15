@@ -1,17 +1,4 @@
 
-cc_binary(
-    name = "gui_ex",
-    srcs = ["gui_ex.cpp"],
-    deps = ["@dlib//:lib"],
-)
-
-cc_binary(
-    name = "surf_extract",
-    srcs = ["surf_extract.cpp"],
-    copts = ["/std:c++17"],
-    deps = ["@dlib//:lib"],
-)
-
 cc_library(
     name = "surf_match",
     hdrs = ["surf_match.h"],
@@ -37,7 +24,6 @@ cc_binary(
     ],
 )
 
-
 cc_binary(
     name = "stitch",
     srcs = ["stitch.cpp"],
@@ -58,7 +44,6 @@ cc_library(
         "@dlib//:lib"
     ],
 )
-
 
 cc_library(
     name = "d2d",
@@ -93,7 +78,7 @@ cc_binary(
         ":map_matcher",
         "@dlib//:lib",
     ],
-
+    visibility = ["//visibility:public"],
 )
 
 

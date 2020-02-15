@@ -6,11 +6,9 @@
 #include <dlib/image_keypoint.h>
 
 #include <iostream>
-#include <filesystem>
 
 using namespace std;
 using namespace dlib;
-namespace fs = std::filesystem;
 
 int main(int argc, char ** argv) {
   try {
@@ -22,17 +20,12 @@ int main(int argc, char ** argv) {
     
     parser.parse(argc, argv);
 
-    const char *bwd = getenv("BUILD_WORKING_DIRECTORY");
-    if (bwd)
-      fs::current_path(bwd);
-    
     array2d<bgr_pixel> img;
     string png_path = get_option(parser, "i", "res/worlds_edge.png");
     cout <<"Loading " <<png_path <<"...";
     load_png(img, png_path);
     cout <<"done" <<endl;
 
-    
     cout <<"Extracting SURF points" <<"...";
     long max_points = get_option(parser, "n", 10000);
     double dthresh = get_option(parser, "t", 30.0);
