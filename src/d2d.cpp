@@ -1,6 +1,7 @@
 #include "d2d.h"
-
 #include <cstdio>
+
+#include "messages.h"
 
 DemoApp::DemoApp(HWND capture) :
   m_capture_hwnd(capture),
@@ -64,8 +65,8 @@ HRESULT DemoApp::Initialize()
                             WS_OVERLAPPEDWINDOW,
                             CW_USEDEFAULT,
                             CW_USEDEFAULT,
-                            1000,
-                            1000,
+                            1300,
+                            1300,
                             NULL,
                             NULL,
                             HINST_THISCOMPONENT,
@@ -74,6 +75,7 @@ HRESULT DemoApp::Initialize()
       hr = m_hwnd ? S_OK : E_FAIL;
       if (SUCCEEDED(hr))
         {
+          //SW_SHOWNORMAL
           ShowWindow(m_hwnd, SW_SHOWNORMAL);
           UpdateWindow(m_hwnd);
         }
@@ -193,7 +195,7 @@ HRESULT DemoApp::CreateDeviceResources()
       if (SUCCEEDED(hr)) {
         ID2D1Bitmap *bitmap = NULL;
         HRESULT hrb = LoadBitmapFromFile(m_pRenderTarget, m_pWICFactory,
-                                         L".\\res\\worlds_edge.png",
+                                         L".\\res\\mp_rr_desertlands_mu1_s4launch_small.png",
                                          2048,
                                          2048,
                                          &m_pBitmap
@@ -239,6 +241,7 @@ LRESULT CALLBACK DemoApp::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
       bool wasHandled = false;
 
+      message::AddMapPoint *amp;
       if (pDemoApp)
         {
           switch (message)
@@ -261,9 +264,12 @@ LRESULT CALLBACK DemoApp::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
               wasHandled = true;
               break;
 
-            case WM_APP:
-              printf("Received WM_APP, repainting\n");
-
+            case message::AddMapPoint::message_type:
+              amp = (message::AddMapPoint *)((void *)wParam);
+              printf("Add map point message %d %d\n", amp->x, amp->y);
+              pDemoApp->add_point(amp->x, amp->y);
+              pDemoApp->OnRender();
+              break;
             case WM_PAINT:
               {
                 pDemoApp->OnRender();
@@ -307,15 +313,21 @@ HRESULT DemoApp::OnRender()
 
       m_pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
 
-
-
       if (m_pBitmap) {
-      D2D1_SIZE_F rtSize = m_pRenderTarget->GetSize();
+        D2D1_SIZE_F rtSize = m_pRenderTarget->GetSize();
         D2D1_SIZE_F img_size = m_pBitmap->GetSize();
         D2D1_POINT_2F pt = D2D1::Point2F(0, 0);
         m_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Scale(rtSize.width / img_size.width, rtSize.height / img_size.height, pt));
         m_pRenderTarget->DrawBitmap(m_pBitmap, D2D1::RectF(0, 0, img_size.width, img_size.height));
+
+        for (auto it = begin(m_draw_points); it != end(m_draw_points); ++it) {
+          //D2D1_ELLIPSE ellipse = D2D1::Ellipse(D2D1::Point2F(it->x, it->y), 8, 8);
+          D2D1_ELLIPSE ellipse = D2D1::Ellipse(*it, 8, 8);
+          m_pRenderTarget->FillEllipse(ellipse, m_pCornflowerBlueBrush);
+        }
+
       }
+
 
       hr = m_pRenderTarget->EndDraw();
     }

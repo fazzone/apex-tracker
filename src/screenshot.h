@@ -7,12 +7,13 @@
 
 struct screenshot {
   HWND m_capture_hwnd;
-  HDC hdc_screen, hdc_memory;
+  HDC m_hdc_memory;
   HBITMAP hbmp;
   void *bitmap_data;
-  size_t m_width_step; 
+  size_t m_width_step;
+  int m_x, m_y, m_width, m_height;
   
-  screenshot(HWND capture_hwnd, int width, int height);
+  screenshot(HWND capture_hwnd, int x, int y, int width, int height);
   ~screenshot();
 
   void refresh();

@@ -84,6 +84,7 @@ cc_library(
     srcs = ["d2d.cpp"],
     hdrs = [
         "d2d.h",
+        "messages.h",
         "screenshot.h",
     ],
     copts = ["/std:c++17"],
@@ -108,6 +109,7 @@ cc_binary(
     ],
     deps = [
         ":d2d",
+        ":surf_match",
         "@dlib//:lib",
     ],
 

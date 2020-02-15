@@ -6,6 +6,8 @@
 #include <wchar.h>
 #include <math.h>
 #include <iostream>
+#include <vector>
+#include <utility>
 
 #include <d2d1.h>
 #include <d2d1helper.h>
@@ -25,6 +27,11 @@ inline void SafeRelease(I **ppi) {
   (*ppi) = NULL;
 }
 
+// struct MapPoint {
+//   float x, y;
+//   MapPoint(float xx, float yy) : x(xx), y(yy) {}
+// };
+
 
 class DemoApp
 {
@@ -39,6 +46,9 @@ public:
   void RunMessageLoop();
 
   HWND get_hwnd() { return m_hwnd; }
+  void add_point(float x, float y) {
+    m_draw_points.push_back(D2D1::Point2F(x, y));
+  }
 
 private:
   // Initialize device-independent resources.
@@ -63,18 +73,16 @@ private:
   HRESULT OnRender();
 
   // Resize the render target.
-  void OnResize(
-                UINT width,
-                UINT height
-                );
+  void OnResize(UINT width, UINT height);
 
   // The windows procedure.
-  static LRESULT CALLBACK WndProc(
-                                  HWND hWnd,
+  static LRESULT CALLBACK WndProc(HWND hWnd,
                                   UINT message,
                                   WPARAM wParam,
                                   LPARAM lParam
                                   );
+
+  std::vector<D2D1_POINT_2F> m_draw_points;
 
   HWND m_capture_hwnd;
 
