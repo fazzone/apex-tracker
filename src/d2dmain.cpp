@@ -12,6 +12,7 @@
 #include <dlib/image_processing.h>
 
 #include "surf_match.h"
+#include "map_matcher.h"
 
 #include "screenshot.h"
 #include "messages.h"
@@ -78,6 +79,8 @@ int WINAPI WinMain(
 
   screenshot mss(capture, s_x, s_y, s_w, s_h);
 
+  map_matcher matcher(map_surf_points, s_w, s_h);
+
   message::AddMapPoint amp;
   if (SUCCEEDED(CoInitialize(NULL)))
     {
@@ -87,7 +90,7 @@ int WINAPI WinMain(
         if (SUCCEEDED(app.Initialize()))
           {
             screenshot mss(capture, s_x, s_y, s_w, s_h);
-            std::thread clock_pub([&app, &mss, &amp, &map_surf_points, s_w, s_h] {
+            std::thread clock_pub([&app, &mss, &amp, &map_surf_points, &matcher, s_w, s_h] {
                                     for  (int i = 0; ; i++) {
                                       std::cout  <<"Hello " <<i <<std::endl;
                                       std::this_thread::sleep_for(0.2s);
@@ -108,31 +111,33 @@ int WINAPI WinMain(
                                       }
 
                                       std::vector<dlib::surf_point> sub_surf_points = dlib::get_surf_points(dimg);
-                                      std::vector<std::pair<size_t, size_t> > matched_points = match_surf_points(sub_surf_points, map_surf_points);
-                                      std::vector<dlib::point> sub_points, map_points;
-                                      for (auto it = begin(matched_points); it != end(matched_points); ++it) {
-                                        sub_points.push_back(sub_surf_points[it->first].p.center);
-                                        map_points.push_back(map_surf_points[it->second].p.center);
-                                      }
-
-                                      // if (i % 5 == 0) {
-                                      //   dlib::save_png(dimg, oss.str());
-                                      //   std::cout <<"Saved " <<oss.str() <<std::endl;
+                                      // std::vector<std::pair<size_t, size_t> > matched_points = match_surf_points(sub_surf_points, map_surf_points);
+                                      // std::vector<dlib::point> sub_points, map_points;
+                                      // for (auto it = begin(matched_points); it != end(matched_points); ++it) {
+                                      //   sub_points.push_back(sub_surf_points[it->first].p.center);
+                                      //   map_points.push_back(map_surf_points[it->second].p.center);
                                       // }
 
-                                      if (sub_points.size() < 3) {
-                                        std::cout <<"Not enough matched points" <<std::endl;
-                                        continue;
-                                      }
-                                      
-                                      auto transform = dlib::find_affine_transform(sub_points, map_points);
-                                      dlib::point sub_center(s_w/2, s_h/2);
-                                      dlib::point new_position = transform(sub_center);
-                                      
+                                      // // if (i % 5 == 0) {
+                                      // //   dlib::save_png(dimg, oss.str());
+                                      // //   std::cout <<"Saved " <<oss.str() <<std::endl;
+                                      // // }
 
-
-                                      amp.x = new_position(0);
-                                      amp.y = new_position(1);
+                                      // if (sub_points.size() < 3) {
+                                      //   std::cout <<"Not enough matched points" <<std::endl;
+                                      //   continue;
+                                      // }
+                                      
+                                      // auto transform = dlib::find_affine_transform(sub_points, map_points);
+                                      // dlib::point sub_center(s_w/2, s_h/2);
+                                      // dlib::point new_position = transform(sub_center);
+                                      
+                                      // amp.x = new_position(0);
+                                      // amp.y = new_position(1);
+                                      
+                                      auto r = matcher.find_match(sub_surf_points);
+                                      amp.x = r.x;
+                                      amp.y = r.y;
                                       
                                       SendMessage(app.get_hwnd(), message::AddMapPoint::message_type, (LPARAM)(&amp), 0);
 

@@ -33,8 +33,6 @@ void screenshot::refresh() {
   //HDC hdc_target = GetDC(m_capture_hwnd);
   HDC hdc_target = GetDC(NULL);
 
-  printf("HDC %p\n", hdc_target);
-
   BOOL r = BitBlt(m_hdc_memory, 0, 0, m_width, m_height, hdc_target, m_x, m_y, SRCCOPY);
   if (!r) {
     printf("BitBlt failed with error %d\n", GetLastError());

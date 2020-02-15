@@ -80,6 +80,18 @@ cc_binary(
 
 
 cc_library(
+    name = "map_matcher",
+    srcs = ["map_matcher.cpp"],
+    hdrs = ["map_matcher.h"],
+    copts = ["/std:c++17"],
+    deps = [
+        ":surf_match",
+        "@dlib//:lib"
+    ],
+)
+
+
+cc_library(
     name = "d2d",
     srcs = ["d2d.cpp"],
     hdrs = [
@@ -110,6 +122,7 @@ cc_binary(
     deps = [
         ":d2d",
         ":surf_match",
+        ":map_matcher",
         "@dlib//:lib",
     ],
 
