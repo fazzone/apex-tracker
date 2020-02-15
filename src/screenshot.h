@@ -1,0 +1,23 @@
+#ifndef _SCREENSHOT_H
+#define _SCREENSHOT_H
+
+#include <windows.h>
+
+//RAII class for screenshot bitmap
+
+struct screenshot {
+  HWND m_capture_hwnd;
+  HDC hdc_screen, hdc_memory;
+  HBITMAP hbmp;
+  void *bitmap_data;
+  size_t m_width_step; 
+  
+  screenshot(HWND capture_hwnd, int width, int height);
+  ~screenshot();
+
+  void refresh();
+  const void *const get_bitmap_data() const { return bitmap_data; }
+  size_t width_step() const { return m_width_step; }
+};
+
+#endif

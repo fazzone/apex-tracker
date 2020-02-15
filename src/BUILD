@@ -60,3 +60,57 @@ cc_binary(
     ],
 )
 
+
+cc_binary(
+    name = "stitch",
+    srcs = ["stitch.cpp"],
+    copts = ["/std:c++17"],
+    deps = [
+        ":surf_match",
+        "@dlib//:lib"
+    ],
+)
+
+cc_binary(
+    name = "windows_test",
+    srcs = ["windows_test.cpp"],
+    copts = ["/std:c++17"],
+    linkopts = ["user32.lib",  "/subsystem:windows"],
+)
+
+
+cc_library(
+    name = "d2d",
+    srcs = ["d2d.cpp"],
+    hdrs = [
+        "d2d.h",
+        "screenshot.h",
+    ],
+    copts = ["/std:c++17"],
+    linkopts = [
+       "user32.lib",
+        "d2d1.lib",
+        "ole32.lib",
+        "oleaut32.lib",
+        "windowscodecs.lib",
+    ]
+)
+
+cc_binary(
+    name = "d2d_test",
+    srcs = [
+        "d2dmain.cpp",
+        "screenshot.cpp",
+    ],
+    copts = ["/std:c++17"],
+    linkopts = ["/subsystem:windows",
+                "gdi32.lib",
+    ],
+    deps = [
+        ":d2d",
+        "@dlib//:lib",
+    ],
+
+)
+
+

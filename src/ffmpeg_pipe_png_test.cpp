@@ -11,6 +11,7 @@
 
 #include <io.h>
 #include <fcntl.h> 
+#include <cstdio>
 
 #include <iostream>
 #include <sstream>
@@ -92,9 +93,7 @@ int main(int argc, char ** argv) {
 
     point last_fix_position(0, 0);
     double search_radius = 1e9;
-
-    int n_sub_surf = 1000;
-
+    double last_distance = -1;
     image_window path_window(map_image);
 
     while (in) {
@@ -102,9 +101,7 @@ int main(int argc, char ** argv) {
 
       //if (frame > 300 && frame % 5 == 0) {
       if (1) {
-        cout <<"Finding SURF points in subimage...";
-        std::vector<surf_point> sub_surf_points = get_surf_points(subimage, n_sub_surf);
-        cout <<"done (" <<sub_surf_points.size() <<" points)" <<endl;
+        std::vector<surf_point> sub_surf_points = get_surf_points(subimage);
 
         std::vector<surf_point> compare_points;
         for (int i = 0; i < map_surf_points.size(); i++) {
@@ -116,7 +113,6 @@ int main(int argc, char ** argv) {
         if (compare_points.size() == 0)
           compare_points = map_surf_points;
         
-        cout <<"Comparing against " <<compare_points.size() <<" descriptors..." <<endl;
         std::vector<std::pair<size_t, size_t> > matched_points = match_surf_points(sub_surf_points, compare_points);
     
         std::vector<point> sub_points, map_points;
@@ -135,18 +131,27 @@ int main(int argc, char ** argv) {
           // save_png(subimage, sfn.str());
           
           search_radius *= 1.5;
-          n_sub_surf = 1000;
           continue;
         }
 
         auto transform = find_affine_transform(sub_points, map_points);
         point sub_center(section_width/2, section_height/2);
-        last_fix_position = transform(sub_center);
+        point new_position = transform(sub_center);
+        double dist_from_last = sqrt(length_squared(new_position - last_fix_position));
 
-        search_radius = 180;
-        n_sub_surf = 50;
-        cout <<"===== Fix position " <<last_fix_position.x() <<", " <<last_fix_position.y() <<endl;
+
+
+        search_radius = 224;
+        cout <<"==== Matched " <<matched_points.size() <<" points" <<endl;
+        cout <<"===== Fix position " <<new_position.x() <<", " <<new_position.y() <<endl;
+        printf("===== distance from last %0.05f\n", dist_from_last);
+        if (last_fix_position.x() != 0)
+          path_window.add_overlay(image_display::overlay_line(last_fix_position, new_position, bgr_pixel(255, 255, 255)));
+        
+        last_fix_position = new_position;
+        last_distance = dist_from_last;
         path_window.add_overlay(image_display::overlay_circle(last_fix_position, 4, rgb_pixel(255,255,255)));
+
 
         //array2d<bgr_pixel> draw_img;
         //assign_image(draw_img, map_image);
@@ -166,6 +171,7 @@ int main(int argc, char ** argv) {
 
       frame++;
     }
+    path_window.wait_until_closed();
 
     return 0;
   } catch (exception& e) {
