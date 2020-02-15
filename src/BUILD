@@ -71,14 +71,6 @@ cc_binary(
     ],
 )
 
-cc_binary(
-    name = "windows_test",
-    srcs = ["windows_test.cpp"],
-    copts = ["/std:c++17"],
-    linkopts = ["user32.lib",  "/subsystem:windows"],
-)
-
-
 cc_library(
     name = "map_matcher",
     srcs = ["map_matcher.cpp"],
@@ -121,7 +113,6 @@ cc_binary(
     ],
     deps = [
         ":d2d",
-        ":surf_match",
         ":map_matcher",
         "@dlib//:lib",
     ],
