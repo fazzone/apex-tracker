@@ -24,16 +24,6 @@ cc_binary(
     ],
 )
 
-cc_binary(
-    name = "stitch",
-    srcs = ["stitch.cpp"],
-    copts = ["/std:c++17"],
-    deps = [
-        ":surf_match",
-        "@dlib//:lib"
-    ],
-)
-
 cc_library(
     name = "map_matcher",
     srcs = ["map_matcher.cpp"],
@@ -70,8 +60,9 @@ cc_binary(
         "screenshot.cpp",
     ],
     copts = ["/std:c++17"],
-    linkopts = ["/subsystem:windows",
-                "gdi32.lib",
+    linkopts = [
+        "/subsystem:windows",
+        "gdi32.lib",
     ],
     deps = [
         ":d2d",
