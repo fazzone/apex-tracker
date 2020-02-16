@@ -321,7 +321,7 @@ HRESULT DemoApp::OnRender()
 
         for (auto it = begin(m_draw_points); it != end(m_draw_points); ++it) {
           //D2D1_ELLIPSE ellipse = D2D1::Ellipse(D2D1::Point2F(it->x, it->y), 8, 8);
-          D2D1_ELLIPSE ellipse = D2D1::Ellipse(*it, 8, 8);
+          D2D1_ELLIPSE ellipse = D2D1::Ellipse(*it, 6, 6);
           m_pRenderTarget->FillEllipse(ellipse, m_pCornflowerBlueBrush);
         }
 
