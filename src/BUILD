@@ -31,7 +31,8 @@ cc_library(
     copts = ["/std:c++17"],
     deps = [
         ":surf_match",
-        "@dlib//:lib"
+        "@dlib//:lib",
+        "@sqlite//:lib"
     ],
 )
 

@@ -6,6 +6,7 @@
 #include <dlib/matrix.h>
 #include <dlib/geometry.h>
 #include <dlib/image_keypoint/surf.h>
+#include <dlib/sqlite.h>
 
 
 struct map_match_result {
@@ -24,7 +25,7 @@ struct point_match {
 
 class map_matcher {
  public:
-  map_matcher(const std::vector<dlib::surf_point> &surf_points, int minimap_w, int minimap_h);
+  map_matcher(dlib::database &the_db, const std::vector<dlib::surf_point> &surf_points, int minimap_w, int minimap_h);
 
   map_match_result find_match(const std::vector<dlib::surf_point> &sub_surf_points);
   map_match_result find_match(const std::vector<dlib::surf_point> &sub_surf_points,
@@ -34,6 +35,9 @@ class map_matcher {
 
   const std::vector<dlib::surf_point> &m_surf_points;
   std::vector<dlib::surf_point> compare_points_buffer;
+
+  dlib::database &db;
+  dlib::statement insert_match_stmt;
 
   dlib::point m_last_fix_position;
   double m_search_radius;

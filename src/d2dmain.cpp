@@ -6,6 +6,7 @@
 
 #include <dlib/data_io.h>
 #include <dlib/image_processing.h>
+#include <dlib/sqlite.h>
 
 #include "map_matcher.h"
 
@@ -30,29 +31,28 @@ int WINAPI WinMain(
 
   AllocConsole();
   freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
-
   HWND capture = NULL; 
 
-  for (HWND hwnd = GetTopWindow(NULL); hwnd != NULL; hwnd = GetNextWindow(hwnd, GW_HWNDNEXT)) {   
-    if (!IsWindowVisible(hwnd)) {
-      continue;
-    }
+  // for (HWND hwnd = GetTopWindow(NULL); hwnd != NULL; hwnd = GetNextWindow(hwnd, GW_HWNDNEXT)) {   
+  //   if (!IsWindowVisible(hwnd)) {
+  //     continue;
+  //   }
 
-    int length = GetWindowTextLength(hwnd);
-    if (length == 0)
-      continue;
+  //   int length = GetWindowTextLength(hwnd);
+  //   if (length == 0)
+  //     continue;
 
-    LPSTR title = new char[length+1];
-    GetWindowText(hwnd, title, length+1);
+  //   LPSTR title = new char[length+1];
+  //   GetWindowText(hwnd, title, length+1);
     
-    std::string ts(title);
-    if (ts.rfind("Apex", 0) == 0) {
-      capture = hwnd;
-      std::cout <<"Capturing window: " <<ts.c_str() <<std::endl;
-      //break;
-    }
+  //   std::string ts(title);
+  //   if (ts.rfind("Apex", 0) == 0) {
+  //     capture = hwnd;
+  //     std::cout <<"Capturing window: " <<ts.c_str() <<std::endl;
+  //     //break;
+  //   }
 
-  }
+  // }
 
   const int fw = 2560, fh = 1440;
   const int screenw = GetSystemMetrics(SM_CXSCREEN), screenh = GetSystemMetrics(SM_CYSCREEN);
@@ -73,7 +73,19 @@ int WINAPI WinMain(
 
   screenshot mss(capture, s_x, s_y, s_w, s_h);
 
-  map_matcher matcher(map_surf_points, s_w, s_h);
+  dlib::database db("tracker.db");
+  dlib::statement st_table_exists(db, "select count(*) from sqlite_master where name = ?");
+  st_table_exists.bind(1, std::string("fix_result"));
+  st_table_exists.exec();
+  st_table_exists.move_next();
+  int table_count = 0;
+  st_table_exists.get_column(0, table_count);
+  std::cout <<"table count? " <<table_count <<std::endl;
+  if (0 == table_count) {
+    db.exec("create table fix_result(id integer primary key, inserted_at datetime, x integer, y integer)");
+  }
+  
+  map_matcher matcher(db, map_surf_points, s_w, s_h);
 
   message::AddMapPoint amp;
   if (SUCCEEDED(CoInitialize(NULL)))
@@ -89,8 +101,6 @@ int WINAPI WinMain(
                                     dimg.set_size(s_h, s_w);
 
                                     for  (int i = 0; ; i++) {
-                                      //std::this_thread::sleep_for(0.2s);
-
                                       mss.refresh();
                                       for (int r = 0; r < s_h; r++) {
                                         unsigned char *row = (unsigned char *)mss.get_bitmap_data() + (r * mss.width_step());
@@ -101,6 +111,7 @@ int WINAPI WinMain(
                                       }
 
                                       std::vector<dlib::surf_point> sub_surf_points = dlib::get_surf_points(dimg);
+
                                       auto r = matcher.find_match(sub_surf_points);
                                       if (r.good) {
                                         amp.x = r.x;
