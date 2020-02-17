@@ -8,6 +8,7 @@
 #include <dlib/cmd_line_parser.h>
 #include <dlib/image_keypoint.h>
 #include <dlib/graph_utils.h>
+#include <dlib/sqlite.h>
 
 #include <io.h>
 #include <fcntl.h> 
@@ -19,17 +20,11 @@
 #include <filesystem>
 #include <cstdlib>
 
-#include "surf_match.h"
+#include "map_matcher.h"
 
 using namespace std;
 using namespace dlib;
 namespace fs = std::filesystem;
-
-struct fix_result {
-  bool good;
-  point position;
-};
-  
 
 int main(int argc, char ** argv) {
   try {
@@ -92,81 +87,29 @@ int main(int argc, char ** argv) {
     assign_image(path_img, map_image);
 
     point last_fix_position(0, 0);
-    double search_radius = 1e9;
-    double last_distance = -1;
+    bool good = false;
     image_window path_window(map_image);
+
+    database db(":memory:");
+    db.exec("create table fix_result(id integer primary key, inserted_at datetime, x integer, y integer)");
+    map_matcher matcher(db, map_surf_points, section_width, section_height);
 
     while (in) {
       in.read(buffer, buffer_size);
 
-      //if (frame > 300 && frame % 5 == 0) {
       if (1) {
         std::vector<surf_point> sub_surf_points = get_surf_points(subimage);
 
-        std::vector<surf_point> compare_points;
-        for (int i = 0; i < map_surf_points.size(); i++) {
-          double d = length_squared(last_fix_position - map_surf_points[i].p.center);
-          if (d < search_radius * search_radius) {
-            compare_points.push_back(map_surf_points[i]);
-          }
-        }
-        if (compare_points.size() == 0)
-          compare_points = map_surf_points;
-        
-        std::vector<std::pair<size_t, size_t> > matched_points = match_surf_points(sub_surf_points, compare_points);
-    
-        std::vector<point> sub_points, map_points;
-        for (auto it = begin(matched_points); it != end(matched_points); ++it) {
-          sub_points.push_back(sub_surf_points[it->first].p.center);
-          map_points.push_back(compare_points[it->second].p.center);
-        }
-
-        if (sub_points.size() < 3) {
-          cout <<"Not enough matched points" <<endl;
-
-          // ostringstream sfn;
-          // sfn <<"hiccup"  <<frame <<".png";
-          // save_png(path_img, sfn.str());
-          // sfn <<".minimap.png";
-          // save_png(subimage, sfn.str());
-          
-          search_radius *= 1.5;
-          continue;
-        }
-
-        auto transform = find_affine_transform(sub_points, map_points);
-        point sub_center(section_width/2, section_height/2);
-        point new_position = transform(sub_center);
-        double dist_from_last = sqrt(length_squared(new_position - last_fix_position));
-
-
-
-        search_radius = 224;
-        cout <<"==== Matched " <<matched_points.size() <<" points" <<endl;
-        cout <<"===== Fix position " <<new_position.x() <<", " <<new_position.y() <<endl;
-        printf("===== distance from last %0.05f\n", dist_from_last);
-        if (last_fix_position.x() != 0)
+        auto r = matcher.find_match(sub_surf_points);
+        good = r.good;
+        if (good) {
+          point new_position(r.x, r.y);
           path_window.add_overlay(image_display::overlay_line(last_fix_position, new_position, bgr_pixel(255, 255, 255)));
-        
-        last_fix_position = new_position;
-        last_distance = dist_from_last;
-        path_window.add_overlay(image_display::overlay_circle(last_fix_position, 4, rgb_pixel(255,255,255)));
+          last_fix_position = new_position;
+          draw_solid_circle(path_img, last_fix_position, 2.0, bgr_pixel(255, 255, 255));
+          path_window.add_overlay(image_display::overlay_circle(last_fix_position, 4, rgb_pixel(255,255,255)));
+        }
 
-
-        //array2d<bgr_pixel> draw_img;
-        //assign_image(draw_img, map_image);
-        //auto rect_transform = rectangle_transform(transform);
-        //auto section_rect = rectangle(0, 0, section_width, section_height);
-        //draw_rectangle(draw_img, rect_transform(section_rect), bgr_pixel(255, 255, 255), 4);
-        //draw_solid_circle(draw_img, transform(sub_center), 8.0, bgr_pixel(255, 255, 255));
-
-        draw_solid_circle(path_img, last_fix_position, 2.0, bgr_pixel(255, 255, 255));
-      
-        // if (frame % 100 == 0) {
-        //   ostringstream sfn;
-        //   sfn <<"path"  <<frame <<".png";
-        //   save_png(path_img, sfn.str());
-        // }
       }
 
       frame++;

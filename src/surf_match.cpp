@@ -34,6 +34,8 @@ std::vector<pair<size_t, size_t>> match_surf_points(const std::vector<surf_point
     }
     if (ibest < 0 || inextbest < 0)
       continue;
+    if (best_d > 0.05)
+      continue;
     if (second_best_d / best_d > 2) {
       printf("best_d, = %0.5f, second_best_d = %0.5f, _d_theta = %0.5f\n", best_d, second_best_d, second_surf_points[ibest].angle -  first_surf_points[ifirst].angle);
       matched_points.emplace_back(ifirst, ibest);

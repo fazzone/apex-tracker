@@ -14,15 +14,6 @@ cc_binary(
     deps = [":surf_match", "@dlib//:lib"],
 )
 
-cc_binary(
-    name = "ffmpeg_pipe_png_test",
-    srcs = ["ffmpeg_pipe_png_test.cpp"],
-    copts = ["/std:c++17"],
-    deps = [
-        ":surf_match",
-        "@dlib//:lib"
-    ],
-)
 
 cc_library(
     name = "map_matcher",
@@ -35,6 +26,17 @@ cc_library(
         "@sqlite//:lib"
     ],
 )
+
+cc_binary(
+    name = "ffmpeg_pipe_png_test",
+    srcs = ["ffmpeg_pipe_png_test.cpp"],
+    copts = ["/std:c++17"],
+    deps = [
+        ":map_matcher",
+        "@dlib//:lib"
+    ],
+)
+
 
 cc_library(
     name = "d2d",

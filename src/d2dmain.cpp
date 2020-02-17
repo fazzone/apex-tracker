@@ -101,6 +101,8 @@ int WINAPI WinMain(
                                     dimg.set_size(s_h, s_w);
 
                                     for  (int i = 0; ; i++) {
+                                      std::this_thread::sleep_for(1.0s);
+
                                       mss.refresh();
                                       for (int r = 0; r < s_h; r++) {
                                         unsigned char *row = (unsigned char *)mss.get_bitmap_data() + (r * mss.width_step());

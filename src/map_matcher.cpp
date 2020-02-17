@@ -22,7 +22,6 @@ map_match_result map_matcher::find_match(const std::vector<surf_point> &sub_surf
 
   compare_points_buffer.clear();
   
-  printf("Computing distance\n");
   for (size_t i = 0; i < m_surf_points.size(); i++) {
     double d = length_squared(m_last_fix_position - m_surf_points[i].p.center);
     if (d < m_search_radius * m_search_radius) {
@@ -30,7 +29,6 @@ map_match_result map_matcher::find_match(const std::vector<surf_point> &sub_surf
     }
   }
 
-  printf("Finding match\n");
   if (compare_points_buffer.size() < 5) {
     m_search_radius = 99999;
     return find_match(sub_surf_points, m_surf_points);
@@ -42,18 +40,26 @@ map_match_result map_matcher::find_match(const std::vector<surf_point> &sub_surf
 map_match_result map_matcher::find_match(const std::vector<surf_point> &sub_surf_points,
                                          const std::vector<surf_point> &compare_points) {
         
-  printf("Doing the actual match\n");
   std::vector<std::pair<size_t, size_t> > matched_points = match_surf_points(sub_surf_points, compare_points);
-  printf("done \n");
 
     
-  std::vector<point> sub_points, map_points;
+  std::vector<point> sub_points, map_points, predicted_position;
   for (auto it = begin(matched_points); it != end(matched_points); ++it) {
-    sub_points.push_back(sub_surf_points[it->first].p.center);
-    map_points.push_back(compare_points[it->second].p.center);
+    auto sub_point = sub_surf_points[it->first].p.center, map_point = compare_points[it->second].p.center;
+    sub_points.push_back(sub_point);
+    map_points.push_back(map_point);
+
+    printf("Scale ratio %g\n", sub_surf_points[it->first].p.scale / compare_points[it->second].p.scale);
   }
 
-  if (sub_points.size() < 3) {
+  // for (size_t i = 0; i < matched_points.size(); i++) {
+  //   for (size_t j = 0; j < i; j++) {
+  //     double x_m = (sub_points[i].x() - 
+  //   }
+  // }
+
+  
+  if (sub_points.size() < 4) {
     cout <<"Not enough matched points" <<endl;
 
     m_search_radius *= 1.5;
