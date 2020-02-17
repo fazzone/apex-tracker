@@ -14,6 +14,12 @@ git_repository(
     commit = "38f86fb55b698c51e8510c807489c9f4e047480e",
 )
 
+git_repository(
+    name = "io_bazel_rules_docker",
+    remote = "https://github.com/bazelbuild/rules_docker.git",
+    commit = "363e12da417e6fa9dd447af5411b14489ea37ac4",
+)
+
 # python requirements
 load("@rules_python//python:repositories.bzl", "py_repositories")
 py_repositories()
@@ -63,3 +69,10 @@ http_archive(
 )
 
 
+register_execution_platforms(
+    ":x64_windows-clang-cl"
+)
+
+register_toolchains(
+    "@local_config_cc//:cc-toolchain-x64_windows-clang-cl",
+)

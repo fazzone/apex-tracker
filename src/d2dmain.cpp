@@ -12,6 +12,7 @@
 
 #include "screenshot.h"
 #include "messages.h"
+#include "schema.h"
 
 using namespace std::chrono_literals;
 
@@ -82,7 +83,7 @@ int WINAPI WinMain(
   st_table_exists.get_column(0, table_count);
   std::cout <<"table count? " <<table_count <<std::endl;
   if (0 == table_count) {
-    db.exec("create table fix_result(id integer primary key, inserted_at datetime, x integer, y integer)");
+    db.exec(schema_tables::create_fix_result);
   }
   
   map_matcher matcher(db, map_surf_points, s_w, s_h);

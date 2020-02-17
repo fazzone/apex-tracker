@@ -30,6 +30,7 @@ cc_library(
 cc_binary(
     name = "ffmpeg_pipe_png_test",
     srcs = ["ffmpeg_pipe_png_test.cpp"],
+    includes = ["schema.h"],
     copts = ["/std:c++17"],
     deps = [
         ":map_matcher",
@@ -62,6 +63,7 @@ cc_binary(
         "d2dmain.cpp",
         "screenshot.cpp",
     ],
+    includes = ["schema.h"],
     copts = ["/std:c++17"],
     linkopts = [
         "/subsystem:windows",
@@ -76,3 +78,9 @@ cc_binary(
 )
 
 
+
+cc_binary(
+    name = "hello",
+    srcs = ["hello.cpp"],
+    visibility = ["//visibility:public"],
+)

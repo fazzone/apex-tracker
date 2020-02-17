@@ -11,9 +11,10 @@
 
 struct map_match_result {
   int x, y;
+  double residual;
   bool good;
 map_match_result() : good(false) {}
-  map_match_result(int xx, int yy) : x(xx), y(yy), good(true) {}
+map_match_result(int xx, int yy, double r) : x(xx), y(yy), good(true), residual(r) {}
 };
 
 struct point_match {
