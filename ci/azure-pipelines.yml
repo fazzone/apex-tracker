@@ -1,6 +1,3 @@
-trigger:
-- master
-
 pool:
   vmImage: 'windows-2019'
 
@@ -9,7 +6,8 @@ steps:
     inputs:
       script: |
         set
-        choco install bazel --no-progress
         set PATH=%PATH%;%PYTHON_HOME%
+        echo %PATH%
         python3 -c print(1234)
+        choco install bazel --no-progress
         bazel build -s --python_path=%PYTHON_HOME% --compilation_mode=opt //:dist
