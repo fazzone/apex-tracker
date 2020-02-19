@@ -10,4 +10,6 @@ steps:
       script: |
         set
         choco install bazel --no-progress
+        set PATH=%PATH%;%PYTHON_HOME%
+        python3 -c print(1234)
         bazel build -s --python_path=%PYTHON_HOME% --compilation_mode=opt //:dist
