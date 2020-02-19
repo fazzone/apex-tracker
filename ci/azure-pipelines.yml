@@ -8,5 +8,6 @@ steps:
   - task: CmdLine@2
     inputs:
       script: |
+        set
         choco install bazel python --no-progress
         bazel build --compilation_mode=opt //:dist
