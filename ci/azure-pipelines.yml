@@ -4,9 +4,10 @@ trigger:
 pool:
   vmImage: 'windows-2019'
 
+steps:
 - task: PowerShell@2
   inputs:
     targetType: 'inline'
     script: |
       Invoke-WebRequest -OutFile bazel.exe https://github.com/bazelbuild/bazel/releases/download/2.1.0/bazel-2.1.0-windows-x86_64.exe
-          bazel.exe build //:dist
+      bazel.exe build //:dist
