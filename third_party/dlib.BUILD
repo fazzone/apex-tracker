@@ -18,6 +18,10 @@ cc_library(
         ":windows": ["/arch:AVX"],
         "//conditions:default": ["-march=native"]
     }),
+    linkopts = select({
+        ":windows": [],
+        "//conditions:default": ["-lpthread"],
+    }),
     deps = ["@libpng//:lib"],
     visibility = ["//visibility:public"], 
     linkstatic = 1,

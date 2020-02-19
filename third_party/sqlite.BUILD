@@ -1,3 +1,11 @@
+config_setting(
+    name = "windows",
+    constraint_values = [
+        "@platforms//os:windows",
+    ],
+)
+
+
 cc_library(
     name = "lib",
     srcs = ["sqlite3.c"],
@@ -6,6 +14,10 @@ cc_library(
         "SQLITE_ENABLE_RTREE",
         "SQLITE_ENABLE_JSON1",
     ],
+    linkopts = select({
+        ":windows": [],
+        "//conditions:default": ["-lpthread", "-ldl"],
+    }),
     visibility = ["//visibility:public"], 
     linkstatic = True,
 )
@@ -19,6 +31,10 @@ cc_binary(
         "SQLITE_ENABLE_RTREE",
         "SQLITE_ENABLE_JSON1",
     ],
+    linkopts = select({
+        ":windows": [],
+        "//conditions:default": ["-lpthread", "-ldl"],
+    }),
     visibility = ["//visibility:public"], 
     linkstatic = True,
 )
