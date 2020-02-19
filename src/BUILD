@@ -1,5 +1,8 @@
+load("//bazel:cc_rules.bzl", "config_settings", "my_cc_library", "my_cc_binary")
 
-cc_library(
+config_settings()
+
+my_cc_library(
     name = "surf_match",
     hdrs = ["surf_match.h"],
     srcs = ["surf_match.cpp"],
@@ -7,7 +10,7 @@ cc_library(
     deps = ["@dlib//:lib"],
 )
 
-cc_binary(
+my_cc_binary(
     name = "surf_test",
     srcs = ["surf_test.cpp"],
     copts = ["/std:c++17"],
@@ -15,7 +18,7 @@ cc_binary(
 )
 
 
-cc_library(
+my_cc_library(
     name = "map_matcher",
     srcs = ["map_matcher.cpp"],
     hdrs = ["map_matcher.h"],
@@ -27,7 +30,7 @@ cc_library(
     ],
 )
 
-cc_binary(
+my_cc_binary(
     name = "ffmpeg_pipe_png_test",
     srcs = ["ffmpeg_pipe_png_test.cpp"],
     includes = ["schema.h"],
@@ -39,7 +42,7 @@ cc_binary(
 )
 
 
-cc_library(
+my_cc_library(
     name = "d2d",
     srcs = ["d2d.cpp"],
     hdrs = [
@@ -57,7 +60,7 @@ cc_library(
     ]
 )
 
-cc_binary(
+my_cc_binary(
     name = "d2d_test",
     srcs = [
         "d2dmain.cpp",
@@ -79,7 +82,7 @@ cc_binary(
 
 
 
-cc_binary(
+my_cc_binary(
     name = "hello",
     srcs = ["hello.cpp"],
     visibility = ["//visibility:public"],
