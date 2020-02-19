@@ -9,5 +9,5 @@ steps:
     inputs:
       script: |
         set
-        choco install bazel python --no-progress
-        bazel build --python_path=%PYTHON_HOME% --compilation_mode=opt //:dist
+        choco install bazel --no-progress
+        bazel build -s --python_path=%PYTHON_HOME% --compilation_mode=opt //:dist
