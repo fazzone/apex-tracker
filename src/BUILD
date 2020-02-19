@@ -6,14 +6,12 @@ my_cc_library(
     name = "surf_match",
     hdrs = ["surf_match.h"],
     srcs = ["surf_match.cpp"],
-    copts = ["/std:c++17"],
     deps = ["@dlib//:lib"],
 )
 
 my_cc_binary(
     name = "surf_test",
     srcs = ["surf_test.cpp"],
-    copts = ["/std:c++17"],
     deps = [":surf_match", "@dlib//:lib"],
 )
 
@@ -22,7 +20,6 @@ my_cc_library(
     name = "map_matcher",
     srcs = ["map_matcher.cpp"],
     hdrs = ["map_matcher.h"],
-    copts = ["/std:c++17"],
     deps = [
         ":surf_match",
         "@dlib//:lib",
@@ -34,7 +31,6 @@ my_cc_binary(
     name = "ffmpeg_pipe_png_test",
     srcs = ["ffmpeg_pipe_png_test.cpp"],
     includes = ["schema.h"],
-    copts = ["/std:c++17"],
     deps = [
         ":map_matcher",
         "@dlib//:lib"
@@ -50,7 +46,6 @@ my_cc_library(
         "messages.h",
         "screenshot.h",
     ],
-    copts = ["/std:c++17"],
     linkopts = [
        "user32.lib",
         "d2d1.lib",
@@ -67,7 +62,6 @@ my_cc_binary(
         "screenshot.cpp",
     ],
     includes = ["schema.h"],
-    copts = ["/std:c++17"],
     linkopts = [
         "/subsystem:windows",
         "gdi32.lib",
@@ -79,8 +73,6 @@ my_cc_binary(
     ],
     visibility = ["//visibility:public"],
 )
-
-
 
 my_cc_binary(
     name = "hello",

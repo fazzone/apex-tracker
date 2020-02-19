@@ -68,11 +68,6 @@ http_archive(
     build_file = "@//third_party:sqlite.BUILD",
 )
 
-
-register_execution_platforms(
-    ":x64_windows-clang-cl"
-)
-
-register_toolchains(
-    "@local_config_cc//:cc-toolchain-x64_windows-clang-cl",
-)
+### Use clang-cl on windows
+# register_execution_platforms(":x64_windows-clang-cl")
+# register_toolchains("@local_config_cc//:cc-toolchain-x64_windows-clang-cl")
