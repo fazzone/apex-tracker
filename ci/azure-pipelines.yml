@@ -5,6 +5,9 @@ pool:
   vmImage: 'windows-2019'
 
 steps:
-  - bash: |
-    choco install bazel python
-    bazel build --compilation_mode=opt //:dist
+  - task: Bash@3
+    inputs:
+      targetType: 'inline'
+      script: |
+        choco install bazel python
+        bazel build --compilation_mode=opt //:dist
