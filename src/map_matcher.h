@@ -43,7 +43,7 @@ class map_matcher {
   dlib::point m_last_fix_position;
   double m_search_radius;
   dlib::point m_minimap_center;
-
+  size_t m_fix_count;
 };
 
 #endif

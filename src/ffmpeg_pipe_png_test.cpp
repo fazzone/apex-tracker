@@ -112,10 +112,18 @@ int main(int argc, char ** argv) {
     cout <<"EXECUTE\n  " <<schema_tables::create_fix_result <<endl;
     db.exec(schema_tables::create_fix_result);
     map_matcher matcher(db, map_surf_points, section_width, section_height);
+    int skip_frames = 0;
 
     while (in) {
+      frame++;
       in.read(buffer, buffer_size);
+      if (skip_frames > 0) {
+        skip_frames--;
+        continue;
+      }
+
       std::vector<surf_point> sub_surf_points = get_surf_points(subimage);
+      printf("%zd points\n", sub_surf_points.size());
       // if (frame % 10 == 0) {
       //   ostringstream oss;
       //   oss <<"frame" <<frame <<".png";
@@ -127,13 +135,15 @@ int main(int argc, char ** argv) {
       if (good) {
         
         point new_position(r.x, r.y);
-        if (n_fix++ > 0)
+        double dist_from_last = sqrt(length_squared(new_position - last_fix_position));
+        n_fix++;
+        if (n_fix > 1)
           path_window.add_overlay(image_display::overlay_line(last_fix_position, new_position, bgr_pixel(255, 255, 255)));
         last_fix_position = new_position;
         path_window.add_overlay(image_display::overlay_circle(last_fix_position, r.residual, rgb_pixel(255,255,255)));
+      } else {
+        skip_frames = 30;
       }
-
-      frame++;
     }
     path_window.wait_until_closed();
 

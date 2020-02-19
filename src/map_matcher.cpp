@@ -14,7 +14,8 @@ map_matcher::map_matcher(database &dbref, const std::vector<surf_point> &surf_po
     insert_match_stmt(db, "insert into fix_result(inserted_at, x, y, residual) values (datetime('now'), ?, ?, ?);"),
     m_surf_points(surf_points),
     compare_points_buffer(surf_points.size()),
-    m_minimap_center(mini_w/2, mini_h/2)
+    m_minimap_center(mini_w/2, mini_h/2),
+    m_fix_count(0)
 {
 }
 
@@ -51,7 +52,7 @@ map_match_result map_matcher::find_match(const std::vector<surf_point> &sub_surf
   }
 
   
-  if (matched_points.size() < 4) {
+  if (matched_points.size() < 3) {
     cout <<"Not enough matched points" <<endl;
 
     m_search_radius *= 1.5;
@@ -65,8 +66,8 @@ map_match_result map_matcher::find_match(const std::vector<surf_point> &sub_surf
     residual_squared += length_squared(map_points[i] - transform(sub_points[i]));
   }
   double residual = sqrt(residual_squared);
-  if (residual > 16) {
-    cout <<"Could not compute a good transform, residuals too high" <<endl;
+  if (residual > 100) {
+    cout <<"Could not compute a good transform, residuals too high - " <<residual <<endl;
     return map_match_result();
   }
 
@@ -74,10 +75,11 @@ map_match_result map_matcher::find_match(const std::vector<surf_point> &sub_surf
   double dist_from_last = sqrt(length_squared(new_position - m_last_fix_position));
 
   m_search_radius = 300;
+  ++m_fix_count;
 
-  cout <<"===== Matched " <<matched_points.size() <<" points" <<endl;
+  cout <<"\n===== Matched " <<matched_points.size() <<" points" <<endl;
   cout <<"===== Fix position " <<new_position.x() <<", " <<new_position.y() <<endl;
-  //printf("===== distance from last %0.05f\n", dist_from_last);
+  printf("===== distance from last %0.05f\n", dist_from_last);
 
   m_last_fix_position = new_position;
   insert_match_stmt.bind(1, new_position.x());

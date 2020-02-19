@@ -19,6 +19,7 @@ int main(int argc, char ** argv) {
     parser.add_option("o", "output SURF points data", 1);
     parser.add_option("n", "max number of points to generate", 1);
     parser.add_option("t", "minimum p score threshold", 1);
+    parser.add_option("sqlite", "sqlite db file", 1);
     
     parser.parse(argc, argv);
 
@@ -28,7 +29,7 @@ int main(int argc, char ** argv) {
     load_png(img, png_path);
     cout <<"done" <<endl;
 
-    database db("surf.db");
+    database db(get_option(parser, "sqlite", ":memory:"));
     db.exec("create table interest_point("
             "  id integer primary key,"
             "  x real, y real,"
