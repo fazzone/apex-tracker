@@ -1,7 +1,7 @@
 load("//src/tools:surf_extract.bzl", "surf_extract")
 surf_extract(
     name = "s4launch_small",
-    image = "//res:mp_rr_desertlands_mu1_s4launch_small.png"
+    image = "//res:mp_rr_desertlands_mu1_s4launch_small.png",
     visibility = ["//visibility:public"],
 )
 
