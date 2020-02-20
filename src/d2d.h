@@ -14,6 +14,8 @@
 #include <dwrite.h>
 #include <wincodec.h>
 
+#include <dlib/sqlite.h>
+
 #ifndef HINST_THISCOMPONENT
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
@@ -36,7 +38,7 @@ inline void SafeRelease(I **ppi) {
 class DemoApp
 {
 public:
-  DemoApp(HWND capture_hwnd);
+  DemoApp(HWND capture_hwnd, dlib::database &dbref);
   ~DemoApp();
 
   // Register the window class and call methods for instantiating drawing resources
@@ -57,13 +59,13 @@ private:
   // Initialize device-dependent resources.
   HRESULT CreateDeviceResources();
 
-  HRESULT DemoApp::LoadBitmapFromFile(ID2D1RenderTarget *pRenderTarget,
-                                      IWICImagingFactory *pIWICFactory,
-                                      PCWSTR uri,
-                                      UINT destinationWidth,
-                                      UINT destinationHeight,
-                                      ID2D1Bitmap **ppBitmap
-                                      );
+  HRESULT LoadBitmapFromFile(ID2D1RenderTarget *pRenderTarget,
+                             IWICImagingFactory *pIWICFactory,
+                             PCWSTR uri,
+                             UINT destinationWidth,
+                             UINT destinationHeight,
+                             ID2D1Bitmap **ppBitmap
+                             );
 
 
   // Release device-dependent resource.
@@ -83,6 +85,8 @@ private:
                                   );
 
   std::vector<D2D1_POINT_2F> m_draw_points;
+  dlib::database &m_db;
+  dlib::statement m_get_render_points_stmt;
 
   HWND m_capture_hwnd;
 

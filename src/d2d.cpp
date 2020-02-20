@@ -3,13 +3,19 @@
 
 #include "messages.h"
 
-DemoApp::DemoApp(HWND capture) :
+using namespace dlib;
+
+DemoApp::DemoApp(HWND capture, database &db) :
   m_capture_hwnd(capture),
   m_hwnd(NULL),
+  m_db(db),
   m_pDirect2dFactory(NULL),
   m_pRenderTarget(NULL),
   m_pLightSlateGrayBrush(NULL),
-  m_pCornflowerBlueBrush(NULL)
+  m_pCornflowerBlueBrush(NULL),
+  m_get_render_points_stmt(db,
+                           "with q as (select id, x, y, lag(x) over w as prev_x, lag(y) over w as prev_y from fix_result window w as (order by id) order by id desc limit 250) "
+                           "select id, x, y from q where (x - prev_x)*(x - prev_x) + (y - prev_y)*(y - prev_y) < 100")
 {
 }
 
@@ -269,6 +275,8 @@ LRESULT CALLBACK DemoApp::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
               pDemoApp->add_point(amp->x, amp->y);
               pDemoApp->OnRender();
               break;
+              
+            case message::Repaint::message_type:
             case WM_PAINT:
               {
                 pDemoApp->OnRender();
@@ -319,11 +327,25 @@ HRESULT DemoApp::OnRender()
         m_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Scale(rtSize.width / img_size.width, rtSize.height / img_size.height, pt));
         m_pRenderTarget->DrawBitmap(m_pBitmap, D2D1::RectF(0, 0, img_size.width, img_size.height));
 
-        for (auto it = begin(m_draw_points); it != end(m_draw_points); ++it) {
-          //D2D1_ELLIPSE ellipse = D2D1::Ellipse(D2D1::Point2F(it->x, it->y), 8, 8);
-          D2D1_ELLIPSE ellipse = D2D1::Ellipse(*it, 6, 6);
+        m_get_render_points_stmt.exec();
+        int maxid = 0;
+        while (m_get_render_points_stmt.move_next()) {
+          float x, y;
+          int id;
+          m_get_render_points_stmt.get_column(0, id);
+          maxid = std::max(maxid, id);
+          m_get_render_points_stmt.get_column(1, x);
+          m_get_render_points_stmt.get_column(2, y);
+          D2D1_ELLIPSE ellipse = D2D1::Ellipse(D2D1::Point2F(x, y), 6, 6);
           m_pRenderTarget->FillEllipse(ellipse, m_pCornflowerBlueBrush);
         }
+        printf("Max ID %d\n", maxid);
+        // for (auto it = begin(m_draw_points); it != end(m_draw_points); ++it) {
+
+        //   //D2D1_ELLIPSE ellipse = D2D1::Ellipse(D2D1::Point2F(it->x, it->y), 8, 8);
+        //   D2D1_ELLIPSE ellipse = D2D1::Ellipse(*it, 6, 6);
+        //   m_pRenderTarget->FillEllipse(ellipse, m_pCornflowerBlueBrush);
+        // }
 
       }
 

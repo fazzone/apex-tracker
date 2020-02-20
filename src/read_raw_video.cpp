@@ -3,11 +3,8 @@
 #include <dlib/image_transforms.h>
 #include <dlib/data_io.h>
 #include <dlib/image_processing.h>
-#include <dlib/gui_widgets.h>
-#include <dlib/image_keypoint/draw_surf_points.h>
 #include <dlib/cmd_line_parser.h>
 #include <dlib/image_keypoint.h>
-#include <dlib/graph_utils.h>
 #include <dlib/sqlite.h>
 
 #include <io.h>
@@ -77,14 +74,8 @@ int main(int argc, char ** argv) {
 
     int buffer_size = sizeof(bgr_pixel) * ncols * nrows;
     char *buffer = (char *)image_data(img);
-    int frame = 0, n_fix = 0;
+    int frame = 0;
     string frame_base = "frame";
-
-    // int
-    //   section_left = 67,
-    //   section_top = 79,
-    //   section_width = 319,
-    //   section_height = 294;
 
     const int fw = 2560, fh = 1440;
     const int screenw = get_option(parser, "w", ncols), screenh = get_option(parser, "h", nrows);
@@ -104,9 +95,7 @@ int main(int argc, char ** argv) {
     const int margin = 32;
     auto subimage_outer = sub_image(img, rectangle(section_left - margin, section_top - margin, section_left + section_width + margin, section_top + section_height + margin));
     
-    point last_fix_position(0, 0);
     bool good = false;
-    image_window path_window(map_image);
 
     database db(get_option(parser, "sqlite", ":memory:"));
     db.exec("pragma journal_mode=wal;");
@@ -135,17 +124,10 @@ int main(int argc, char ** argv) {
       if (good) {
         
         point new_position(r.x, r.y);
-        double dist_from_last = sqrt(length_squared(new_position - last_fix_position));
-        n_fix++;
-        if (n_fix > 1)
-          path_window.add_overlay(image_display::overlay_line(last_fix_position, new_position, bgr_pixel(255, 255, 255)));
-        last_fix_position = new_position;
-        path_window.add_overlay(image_display::overlay_circle(last_fix_position, r.residual, rgb_pixel(255,255,255)));
       } else {
         skip_frames = 30;
       }
     }
-    path_window.wait_until_closed();
 
     return 0;
   } catch (exception& e) {

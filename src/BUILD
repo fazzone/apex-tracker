@@ -37,6 +37,30 @@ my_cc_binary(
     ],
 )
 
+my_cc_library(
+    name = "read_raw_video",
+    srcs = ["read_raw_video.cpp"],
+    includes = ["schema.h"],
+    deps = [
+        ":map_matcher",
+        "@dlib//:lib",
+        "@sqlite//:lib"
+    ],
+)
+
+my_cc_binary(
+    name = "video_reader",
+    deps = [":read_raw_video"],
+    linkstatic = 1,
+)
+
+my_cc_binary(
+    name = "video_reader_musl",
+    deps = [":read_raw_video"],
+    linkstatic = 1,
+    linkopts = ["-Wl,-dynamic-linker,/lib/ld-musl-x86_64.so.1"],
+    visibility = ["//visibility:public"],
+)
 
 my_cc_library(
     name = "d2d",
@@ -46,8 +70,13 @@ my_cc_library(
         "messages.h",
         "screenshot.h",
     ],
+    deps = [
+        "@dlib//:lib",
+        "@sqlite//:lib",
+    ],
     linkopts = [
-       "user32.lib",
+        "user32.lib",
+        "shell32.lib",
         "d2d1.lib",
         "ole32.lib",
         "oleaut32.lib",

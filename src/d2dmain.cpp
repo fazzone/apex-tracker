@@ -7,6 +7,8 @@
 #include <dlib/data_io.h>
 #include <dlib/image_processing.h>
 #include <dlib/sqlite.h>
+#include <dlib/cmd_line_parser.h>
+#include <dlib/string.h>
 
 #include "map_matcher.h"
 
@@ -15,6 +17,7 @@
 #include "schema.h"
 
 using namespace std::chrono_literals;
+using namespace dlib;
 
 int WINAPI WinMain(
                    HINSTANCE /* hInstance */,
@@ -55,6 +58,19 @@ int WINAPI WinMain(
 
   // }
 
+  int argc;
+  LPWSTR *argv;
+  std::string *arg_strings = new std::string[argc];
+  argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+  const char **proper_argv;
+  for (int i = 0; i < argc; i++) {
+    arg_strings[i] = dlib::narrow(std::wstring(argv[i]));
+    proper_argv[i] = arg_strings[i].c_str();
+  }
+  command_line_parser parser;
+  parser.add_option("sqlite","sqlite db file", 1);
+  parser.parse(argc, proper_argv);
+
   const int fw = 2560, fh = 1440;
   const int screenw = GetSystemMetrics(SM_CXSCREEN), screenh = GetSystemMetrics(SM_CYSCREEN);
   const int fs_x = 67, fs_y = 79, fs_w = 319, fs_h = 294;
@@ -74,54 +90,61 @@ int WINAPI WinMain(
 
   screenshot mss(capture, s_x, s_y, s_w, s_h);
 
-  dlib::database db("tracker.db");
-  dlib::statement st_table_exists(db, "select count(*) from sqlite_master where name = ?");
-  st_table_exists.bind(1, std::string("fix_result"));
-  st_table_exists.exec();
-  st_table_exists.move_next();
-  int table_count = 0;
-  st_table_exists.get_column(0, table_count);
-  std::cout <<"table count? " <<table_count <<std::endl;
-  if (0 == table_count) {
-    db.exec(schema_tables::create_fix_result);
-  }
+  auto dbfile = get_option(parser, "sqlite", ":memory:");
+  database db(dbfile);
+  std::cout <<"Reading sqlite db " <<dbfile <<std::endl;
+  db.exec("pragma journal_mode=wal;");
+  // dlib::statement st_table_exists(db, "select count(*) from sqlite_master where name = ?");
+  // st_table_exists.bind(1, std::string("fix_result"));
+  // st_table_exists.exec();
+  // st_table_exists.move_next();
+  // int table_count = 0;
+  // st_table_exists.get_column(0, table_count);
+  // std::cout <<"table count? " <<table_count <<std::endl;
+  // if (0 == table_count) {
+  //   db.exec(schema_tables::create_fix_result);
+  // }
   
-  map_matcher matcher(db, map_surf_points, s_w, s_h);
+  // map_matcher matcher(db, map_surf_points, s_w, s_h);
 
   message::AddMapPoint amp;
   if (SUCCEEDED(CoInitialize(NULL)))
     {
       {
-        DemoApp app(capture);
+        DemoApp app(capture, db);
 
         if (SUCCEEDED(app.Initialize()))
           {
             screenshot mss(capture, s_x, s_y, s_w, s_h);
-            std::thread clock_pub([&app, &mss, &amp, &map_surf_points, &matcher, s_w, s_h] {
+            std::thread clock_pub([&app, &mss, &amp, &map_surf_points, s_w, s_h] {
                                     dlib::array2d<dlib::bgr_pixel> dimg;
                                     dimg.set_size(s_h, s_w);
 
                                     for  (int i = 0; ; i++) {
-                                      std::this_thread::sleep_for(0.3s);
+                                      std::this_thread::sleep_for(0.1s);
 
-                                      mss.refresh();
-                                      for (int r = 0; r < s_h; r++) {
-                                        unsigned char *row = (unsigned char *)mss.get_bitmap_data() + (r * mss.width_step());
-                                        for (int c = 0; c < s_w; c++) {
-                                          unsigned char *pix = row + (4 * c);
-                                          dlib::assign_pixel(dimg[r][c], dlib::rgb_pixel(pix[2], pix[1], pix[0]));
-                                        }
-                                      }
 
-                                      std::vector<dlib::surf_point> sub_surf_points = dlib::get_surf_points(dimg);
+                                      SendMessage(app.get_hwnd(), message::Repaint::message_type, 0, 0);
+                                      continue;
 
-                                      auto r = matcher.find_match(sub_surf_points);
-                                      if (r.good) {
-                                        amp.x = r.x;
-                                        amp.y = r.y;
+                                      // mss.refresh();
+                                      // for (int r = 0; r < s_h; r++) {
+                                      //   unsigned char *row = (unsigned char *)mss.get_bitmap_data() + (r * mss.width_step());
+                                      //   for (int c = 0; c < s_w; c++) {
+                                      //     unsigned char *pix = row + (4 * c);
+                                      //     dlib::assign_pixel(dimg[r][c], dlib::rgb_pixel(pix[2], pix[1], pix[0]));
+                                      //   }
+                                      // }
+
+                                      // std::vector<dlib::surf_point> sub_surf_points = dlib::get_surf_points(dimg);
+
+                                      // auto r = matcher.find_match(sub_surf_points);
+                                      // if (r.good) {
+                                      //   amp.x = r.x;
+                                      //   amp.y = r.y;
                                       
-                                        SendMessage(app.get_hwnd(), message::AddMapPoint::message_type, (LPARAM)(&amp), 0);
-                                      }
+                                      //   SendMessage(app.get_hwnd(), message::AddMapPoint::message_type, (LPARAM)(&amp), 0);
+                                      // }
                                     }
                                   });
 
