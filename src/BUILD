@@ -41,6 +41,10 @@ my_cc_library(
     name = "read_raw_video",
     srcs = ["read_raw_video.cpp"],
     includes = ["schema.h"],
+    defines = select({
+        ":windows": ["WINDOWS_STDIN_REOPEN"],
+        "//conditions:default": [],
+    }),
     deps = [
         ":map_matcher",
         "@dlib//:lib",
