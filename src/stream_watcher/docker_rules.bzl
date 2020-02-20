@@ -13,6 +13,16 @@ nop_rule = rule(
     attrs = {"thing": attr.label()}
 )
 
+def docker_load(name = None, archive = None, **kwargs):
+    native.genrule(
+        name = name,
+        srcs = [archive],
+        outs = ["image_id/" + name],
+        tags = ["local"],
+        cmd = "docker load -i $< | sed -e 's/Loaded image ID: //g' > $@",
+        **kwargs,
+    )
+
 def docker_image(
         name = None,
         base = None,
@@ -23,7 +33,7 @@ def docker_image(
     native.genrule(
         name = name,
         message = "docker image {}".format(name),
-        srcs = [add_archive],
+        srcs = [add_archive, base],
         outs = ["image_id/" + name],
         # We can't be cached becuase our output is really the fact that we loaded the image into our local Docker
         tags = ["local", "docker-image"],
@@ -32,11 +42,11 @@ def docker_image(
         mkdir docker-build-root
         ARCHIVE=$(location {archive})
         ARCHIVE_NAME=$$(basename $$ARCHIVE)
+        BASE_IMAGE=$$(cat $(location {base}))
         cp $(location {archive}) docker-build-root/$$ARCHIVE_NAME
         cat >docker-build-root/Dockerfile <<EOF
-FROM {base}
-COPY $$ARCHIVE_NAME /__$$ARCHIVE_NAME
-RUN mkdir -p {prefix} && cd {prefix} && unzip /__$$ARCHIVE_NAME && rm /__$$ARCHIVE_NAME
+FROM $$BASE_IMAGE
+ADD $$ARCHIVE_NAME {prefix}
 EOF
         docker build --iidfile $(OUTS) docker-build-root
         echo "`cat $(OUTS)`"

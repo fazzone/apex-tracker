@@ -1,5 +1,5 @@
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository", "git_repository")
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 
 ## build rules
 http_archive(
@@ -20,20 +20,13 @@ git_repository(
     commit = "363e12da417e6fa9dd447af5411b14489ea37ac4",
 )
 
-# python requirements
-load("@rules_python//python:repositories.bzl", "py_repositories")
-py_repositories()
-
-load("@rules_python//python:pip.bzl", "pip_repositories", "pip3_import")
-pip_repositories()
-
-pip3_import(
-    name = "stream_watcher_deps",
-    requirements = "@//src/stream_watcher:requirements.txt",
+# docker
+http_file(
+    name = "stream_watcher_base_image",
+    urls = ["https://apex-tracker.s3-us-west-2.amazonaws.com/apex-tracker-base-docker.tar.gz"],
+    downloaded_file_path = "apex-tracker-base-docker.tar.gz",
 )
 
-load("@stream_watcher_deps//:requirements.bzl", "pip_install")
-pip_install()
 
 ## cc libraries
 http_archive(
