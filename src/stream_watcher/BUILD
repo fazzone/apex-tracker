@@ -3,7 +3,11 @@ load("@rules_pkg//:pkg.bzl", "pkg_tar", "pkg_zip")
 
 pkg_tar(
     name = "app_files",
-    srcs = ["@//src:hello"],
+    srcs = [
+        "//src:video_reader_musl",
+        "//res:mp_rr_desertlands_mu1_s4launch_small.png",
+        "//:s4launch_small",
+    ],
 )
 
 docker_load(
