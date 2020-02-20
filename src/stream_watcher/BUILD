@@ -4,7 +4,7 @@ load("@rules_pkg//:pkg.bzl", "pkg_tar", "pkg_zip")
 pkg_tar(
     name = "app_files",
     srcs = [
-        "//src:video_reader_musl",
+        "//src:video_reader",
         "//res:mp_rr_desertlands_mu1_s4launch_small.png",
         "//:s4launch_small",
     ],

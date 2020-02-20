@@ -45,6 +45,7 @@ my_cc_library(
         ":windows": ["WINDOWS_STDIN_REOPEN"],
         "//conditions:default": [],
     }),
+    linkstatic = 1,
     deps = [
         ":map_matcher",
         "@dlib//:lib",
@@ -56,14 +57,6 @@ my_cc_binary(
     name = "video_reader",
     deps = [":read_raw_video"],
     linkstatic = 1,
-)
-
-my_cc_binary(
-    name = "video_reader_musl",
-    deps = [":read_raw_video"],
-    linkstatic = 1,
-    linkopts = ["-Wl,-dynamic-linker,/lib/ld-musl-x86_64.so.1"],
-    visibility = ["//visibility:public"],
 )
 
 my_cc_library(
