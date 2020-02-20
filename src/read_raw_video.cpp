@@ -117,14 +117,13 @@ int main(int argc, char ** argv) {
     while (in) {
       frame++;
       
+      auto t1 = std::chrono::high_resolution_clock::now();
       in.read(buffer, buffer_size);
       
       if (skip_frames > 0) {
         skip_frames--;
         continue;
       }
-
-      auto t1 = std::chrono::high_resolution_clock::now();
       
       std::vector<surf_point> sub_surf_points = get_surf_points(subimage);
       printf("%zd points\n", sub_surf_points.size());
@@ -132,7 +131,7 @@ int main(int argc, char ** argv) {
 
       auto t2 = std::chrono::high_resolution_clock::now();
       double elapsed = chrono::duration_cast<chrono::duration<double>>(t2 - t1).count();
-      skip_frames = std::max(0, (int)((elapsed - seconds_per_frame)/seconds_per_frame));
+      skip_frames = std::max(0, (int)(elapsed / seconds_per_frame));
       printf("\n %g s elapsed, budget %g, Skip %d frames\n", elapsed, seconds_per_frame, skip_frames);
     }
 
