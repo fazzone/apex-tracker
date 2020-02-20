@@ -7,10 +7,13 @@
 #include <dlib/image_keypoint.h>
 #include <dlib/sqlite.h>
 
+
+#ifdef WINDOWS_STDIN_REOPEN
 #include <io.h>
 #include <fcntl.h> 
-#include <cstdio>
+#endif 
 
+#include <cstdio>
 
 #include <iostream>
 #include <sstream>
@@ -70,9 +73,11 @@ int main(int argc, char ** argv) {
       ifs.open(input_file, ifstream::binary);
       pin = &ifs;
     }
+#ifdef WINDOWS_STDIN_REOPEN
     else if (-1 == _setmode(_fileno(stdin), _O_BINARY)) {
       throw "error setting stdin to binary";
     }
+#endif
     std::istream &in = *pin;
 
     int buffer_size = sizeof(bgr_pixel) * ncols * nrows;
