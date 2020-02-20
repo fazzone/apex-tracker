@@ -1,4 +1,4 @@
-load(":docker_rules.bzl", "docker_image", "docker_load")
+load(":docker_rules.bzl", "docker_image", "docker_load", "dockerfile_build")
 load("@rules_pkg//:pkg.bzl", "pkg_tar", "pkg_zip")
 
 pkg_tar(
@@ -10,9 +10,9 @@ pkg_tar(
     ],
 )
 
-docker_load(
+dockerfile_build(
     name = "base",
-    archive = "@stream_watcher_base_image//file",
+    dockerfile = "base.Dockerfile",
 )
 
 docker_image(

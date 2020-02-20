@@ -23,6 +23,31 @@ def docker_load(name = None, archive = None, **kwargs):
         **kwargs,
     )
 
+def dockerfile_build_and_save(name = None, dockerfile = None, **kwargs):
+    native.genrule(
+        name = name,
+        srcs = [dockerfile],
+        outs = [name + ".tar.gz"],
+        cmd = """
+docker build --iidfile {name}.iid - < $<
+docker save $$(cat {name}.iid) | gzip > $@
+""".format(
+    name = name,
+),
+        **kwargs
+    )
+
+def dockerfile_build(name = None, dockerfile = None, **kwargs):
+    native.genrule(
+        name = name,
+        srcs = [dockerfile],
+        tags = ["local"],
+        outs = ["image_id/" + name],
+        cmd = "docker build --iidfile $@ - < $<",
+        **kwargs
+    )
+
+
 def docker_image(
         name = None,
         base = None,
