@@ -7,16 +7,15 @@
 #include <dlib/image_keypoint.h>
 #include <dlib/sqlite.h>
 
-#ifdef WINDOWS_STDIN_REOPEN
 #include <io.h>
 #include <fcntl.h> 
-#endif
 #include <cstdio>
 
 
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <chrono>
 #include <filesystem>
 #include <cstdlib>
 
@@ -35,6 +34,7 @@ int main(int argc, char ** argv) {
     parser.add_option("w","original source video width", 1);
     parser.add_option("h","original source video height", 1);
     parser.add_option("sqlite","sqlite db file", 1);
+    parser.add_option("fps","Target fps", 1);
 
     parser.add_option("i", "input raw video, use - for stdin", 1);
     parser.add_option("m", "input map png", 1);
@@ -70,11 +70,9 @@ int main(int argc, char ** argv) {
       ifs.open(input_file, ifstream::binary);
       pin = &ifs;
     }
-#ifdef WINDOWS_STDIN_REPOEN
     else if (-1 == _setmode(_fileno(stdin), _O_BINARY)) {
       throw "error setting stdin to binary";
     }
-#endif
     std::istream &in = *pin;
 
     int buffer_size = sizeof(bgr_pixel) * ncols * nrows;
@@ -108,32 +106,32 @@ int main(int argc, char ** argv) {
     map_matcher matcher(db, map_surf_points, section_width, section_height);
     int skip_frames = 0;
 
+    int target_fps = get_option(parser, "fps", 60);
+    double seconds_per_frame = 1.0 / target_fps;
+
     while (in) {
       frame++;
+      
       in.read(buffer, buffer_size);
+      
       if (skip_frames > 0) {
         skip_frames--;
         continue;
       }
 
+      auto t1 = std::chrono::high_resolution_clock::now();
+      
       std::vector<surf_point> sub_surf_points = get_surf_points(subimage);
       printf("%zd points\n", sub_surf_points.size());
-      // if (frame % 10 == 0) {
-      //   ostringstream oss;
-      //   oss <<"frame" <<frame <<".png";
-      //   save_png(subimage, oss.str());
-      // }
+      matcher.find_match(sub_surf_points);
 
-      auto r = matcher.find_match(sub_surf_points);
-      good = r.good;
-      if (good) {
-        
-        point new_position(r.x, r.y);
-      } else {
-        skip_frames = 30;
-      }
+      auto t2 = std::chrono::high_resolution_clock::now();
+      double elapsed = chrono::duration_cast<chrono::duration<double>>(t2 - t1).count();
+      skip_frames = std::max(0, (int)((elapsed - seconds_per_frame)/seconds_per_frame));
+      printf("\n %g s elapsed, budget %g, Skip %d frames\n", elapsed, seconds_per_frame, skip_frames);
     }
 
+    printf("How is this possible\n");
     return 0;
   } catch (exception& e) {
     cout << "\nexception thrown!" << endl;

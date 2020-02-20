@@ -54,7 +54,6 @@ map_match_result map_matcher::find_match(const std::vector<surf_point> &sub_surf
   
   if (matched_points.size() < 3) {
     cout <<"Not enough matched points" <<endl;
-
     m_search_radius *= 1.5;
     return map_match_result();
   }
@@ -77,7 +76,7 @@ map_match_result map_matcher::find_match(const std::vector<surf_point> &sub_surf
   m_search_radius = 300;
   ++m_fix_count;
 
-  cout <<"\n===== Matched " <<matched_points.size() <<" points" <<endl;
+  cout <<"===== Matched " <<matched_points.size() <<" points" <<endl;
   cout <<"===== Fix position " <<new_position.x() <<", " <<new_position.y() <<endl;
   printf("===== distance from last %0.05f\n", dist_from_last);
 
