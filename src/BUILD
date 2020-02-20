@@ -57,6 +57,7 @@ my_cc_binary(
     name = "video_reader",
     deps = [":read_raw_video"],
     linkstatic = 1,
+    visibility = ["//visibility:public"],
 )
 
 my_cc_library(
