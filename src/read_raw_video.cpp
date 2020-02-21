@@ -100,39 +100,23 @@ int main(int argc, char ** argv) {
       section_height = (int)(fs_h_ratio * screenh);
     
     auto subimage = sub_image(img, rectangle(section_left, section_top, section_left + section_width, section_top + section_height));
-    const int margin = 32;
-    auto subimage_outer = sub_image(img, rectangle(section_left - margin, section_top - margin, section_left + section_width + margin, section_top + section_height + margin));
     
-    bool good = false;
-
     database db(get_option(parser, "sqlite", ":memory:"));
     db.exec("pragma journal_mode=wal;");
     db.exec(schema_tables::create_fix_result);
     map_matcher matcher(db, map_surf_points, section_width, section_height);
+
     int skip_frames = 0;
-
-    int target_fps = get_option(parser, "fps", 60);
-    double seconds_per_frame = 1.0 / target_fps;
-
     while (in) {
       frame++;
-      
-      auto t1 = std::chrono::high_resolution_clock::now();
-      in.read(buffer, buffer_size);
-      
-      if (skip_frames > 0) {
+      while (skip_frames > 0)
         skip_frames--;
-        continue;
-      }
-      
+      in.read(buffer, buffer_size);
       std::vector<surf_point> sub_surf_points = get_surf_points(subimage);
       printf("%zd points\n", sub_surf_points.size());
-      matcher.find_match(sub_surf_points);
-
-      auto t2 = std::chrono::high_resolution_clock::now();
-      double elapsed = chrono::duration_cast<chrono::duration<double>>(t2 - t1).count();
-      skip_frames = std::max(0, (int)(elapsed / seconds_per_frame));
-      printf("\n %g s elapsed, budget %g, Skip %d frames\n", elapsed, seconds_per_frame, skip_frames);
+      auto mr = matcher.find_match(sub_surf_points);
+      if (!mr.good)
+        skip_frames = 10;
     }
 
     printf("How is this possible\n");
